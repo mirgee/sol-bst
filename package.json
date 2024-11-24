@@ -5,7 +5,8 @@
     "hardhat": "^2.22.15"
   },
   "scripts": {
-    "test": "hardhat test",
-    "compile": "hardhat compile"
+    "compile": "hardhat compile",
+    "deploy": "hardhat ignition deploy ./ignition/modules/BinarySearchTree.js",
+    "test": "hardhat test"
   }
 }
