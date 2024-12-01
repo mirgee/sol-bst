@@ -77,6 +77,16 @@ library RBT {
         _fixRedRed(tree, nodeId);
     }
 
+    // TODO: Maintain top for O(1) complexity
+    function peek(Tree storage tree) internal view returns (uint256) {
+        require(tree.root != NULL_NODE, "Tree is empty");
+        uint256 current = tree.root;
+        while (tree.nodes[current].left != NULL_NODE) {
+            current = tree.nodes[current].left;
+        }
+        return tree.nodes[current].value;
+    }
+
     function _fixRedRed(Tree storage tree, uint256 nodeId) internal {
         uint256 parentId = tree.nodes[nodeId].parent;
         if (!tree.nodes[parentId].red) {
