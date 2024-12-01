@@ -87,6 +87,32 @@ library RBT {
         return tree.nodes[current].value;
     }
 
+    function exists(
+        Tree storage tree,
+        uint256 value
+    ) internal view returns (bool) {
+        return _find(tree, value) != NULL_NODE;
+    }
+
+    function _find(
+        Tree storage tree,
+        uint256 value
+    ) internal view returns (uint256) {
+        uint256 current = tree.root;
+        while (current != NULL_NODE) {
+            Node storage currentNode = tree.nodes[current];
+            if (value == currentNode.value) {
+                return current;
+            }
+            if (tree.comparator(value, currentNode.value)) {
+                current = currentNode.left;
+            } else {
+                current = currentNode.right;
+            }
+        }
+        return NULL_NODE;
+    }
+
     function _fixRedRed(Tree storage tree, uint256 nodeId) internal {
         uint256 parentId = tree.nodes[nodeId].parent;
         if (!tree.nodes[parentId].red) {
