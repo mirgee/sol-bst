@@ -23,6 +23,7 @@ library BST {
         function(uint256, uint256) view returns (bool) _comparator
     ) internal {
         tree.counter = 0;
+        tree.size = 0;
         tree.comparator = _comparator;
         tree.root = NULL_NODE;
     }
