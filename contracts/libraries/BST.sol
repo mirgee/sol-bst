@@ -104,6 +104,28 @@ library BST {
         return false;
     }
 
+    function list(Tree storage tree) internal view returns (uint256[] memory) {
+        uint256[] memory result = new uint256[](tree.size);
+        _inorder(tree, tree.root, result, 0);
+        return result;
+    }
+
+    function _inorder(
+        Tree storage tree,
+        uint256 current,
+        uint256[] memory result,
+        uint256 index
+    ) internal view returns (uint256) {
+        if (current == NULL_NODE) {
+            return index;
+        }
+        Node storage currentNode = tree.nodes[current];
+        index = _inorder(tree, currentNode.left, result, index);
+        result[index++] = currentNode.value;
+        index = _inorder(tree, currentNode.right, result, index);
+        return index;
+    }
+
     function _remove(
         Tree storage tree,
         uint256 current,

@@ -159,4 +159,18 @@ describe("BinarySearchTree", function () {
     expect(await bst.exists(15)).to.equal(true);
     expect(await bst.exists(20)).to.equal(false);
   });
+
+  it("list all elements in sorted order", async function () {
+    const elements = [50, 30, 70, 20, 40, 60, 80];
+
+    for (const value of elements) {
+      await bst.insert(value);
+    }
+
+    const list = await bst.list();
+    const listValues = list.map((bn) => Number(bn));
+    const expectedList = [...elements].sort((a, b) => a - b);
+
+    expect(listValues).to.deep.equal(expectedList);
+  });
 });

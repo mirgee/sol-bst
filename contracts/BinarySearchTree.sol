@@ -28,6 +28,10 @@ contract BinarySearchTree {
         return tree.peek();
     }
 
+    function list() public view returns (uint256[] memory) {
+        return tree.list();
+    }
+
     function root() public view returns (uint256) {
       return tree.root;
     }
