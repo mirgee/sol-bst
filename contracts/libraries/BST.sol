@@ -15,20 +15,17 @@ library BST {
         uint256 root;
         uint256 size;
         uint256 counter;
-        function(uint256, uint256) view returns (bool) comparator;
     }
 
-    function init(
-        Tree storage tree,
-        function(uint256, uint256) view returns (bool) _comparator
-    ) internal {
-        tree.counter = 0;
-        tree.size = 0;
-        tree.comparator = _comparator;
+    function init(Tree storage tree) internal {
         tree.root = NULL_NODE;
     }
 
-    function insert(Tree storage tree, uint256 value) internal {
+    function insert(
+        Tree storage tree,
+        uint256 value,
+        function(uint256, uint256) view returns (bool) comparator
+    ) internal {
         uint256 nodeId = tree.counter++;
         if (tree.root == NULL_NODE) {
             tree.root = nodeId;
@@ -43,7 +40,7 @@ library BST {
             if (value == currentNode.value) {
                 return;
             }
-            if (tree.comparator(value, currentNode.value)) {
+            if (comparator(value, currentNode.value)) {
                 if (currentNode.left == NULL_NODE) {
                     currentNode.left = nodeId;
                     tree.nodes[nodeId] = Node(value, NULL_NODE, NULL_NODE);
@@ -69,28 +66,36 @@ library BST {
         return tree.nodes[minId].value;
     }
 
-    function pop(Tree storage tree) internal returns (uint256) {
+    function pop(
+        Tree storage tree,
+        function(uint256, uint256) view returns (bool) comparator
+    ) internal returns (uint256) {
         require(tree.root != NULL_NODE, "Tree is empty");
         uint256 minId = _findMin(tree, tree.root);
         uint256 minValue = tree.nodes[minId].value;
-        remove(tree, minValue);
+        remove(tree, minValue, comparator);
         return minValue;
     }
 
-    function remove(Tree storage tree, uint256 value) internal {
-        tree.root = _remove(tree, tree.root, value);
+    function remove(
+        Tree storage tree,
+        uint256 value,
+        function(uint256, uint256) view returns (bool) comparator
+    ) internal {
+        tree.root = _remove(tree, tree.root, value, comparator);
     }
 
     function exists(
         Tree storage tree,
-        uint256 value
+        uint256 value,
+        function(uint256, uint256) view returns (bool) comparator
     ) internal view returns (bool) {
         uint256 current = tree.root;
         while (current != NULL_NODE) {
             Node storage currentNode = tree.nodes[current];
             if (currentNode.value == value) {
                 return true;
-            } else if (tree.comparator(value, currentNode.value)) {
+            } else if (comparator(value, currentNode.value)) {
                 current = currentNode.left;
             } else {
                 current = currentNode.right;
@@ -102,7 +107,8 @@ library BST {
     function _remove(
         Tree storage tree,
         uint256 current,
-        uint256 value
+        uint256 value,
+        function(uint256, uint256) view returns (bool) comparator
     ) internal returns (uint256) {
         if (current == NULL_NODE) return NULL_NODE;
 
@@ -133,12 +139,23 @@ library BST {
             currentNode.right = _remove(
                 tree,
                 currentNode.right,
-                successorNode.value
+                successorNode.value,
+                comparator
             );
-        } else if (tree.comparator(value, currentNode.value)) {
-            currentNode.left = _remove(tree, currentNode.left, value);
+        } else if (comparator(value, currentNode.value)) {
+            currentNode.left = _remove(
+                tree,
+                currentNode.left,
+                value,
+                comparator
+            );
         } else {
-            currentNode.right = _remove(tree, currentNode.right, value);
+            currentNode.right = _remove(
+                tree,
+                currentNode.right,
+                value,
+                comparator
+            );
         }
 
         return current;
@@ -158,4 +175,3 @@ library BST {
         return NULL_NODE;
     }
 }
-

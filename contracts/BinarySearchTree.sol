@@ -10,18 +10,18 @@ contract BinarySearchTree {
     event Popped(uint256 value);
 
     constructor() {
-        tree.init(defaultComparator);
+        tree.init();
     }
 
     function defaultComparator(
         uint256 a,
         uint256 b
-    ) public pure returns (bool) {
+    ) internal pure returns (bool) {
         return a < b;
     }
 
     function insert(uint256 value) public {
-        tree.insert(value);
+        tree.insert(value, defaultComparator);
     }
 
     function peek() public view returns (uint256) {
@@ -33,17 +33,17 @@ contract BinarySearchTree {
     }
 
     function pop() public returns (uint256) {
-        uint256 popped = tree.pop();
+        uint256 popped = tree.pop(defaultComparator);
         emit Popped(popped);
         return popped;
     }
 
     function remove(uint256 value) public {
-        tree.remove(value);
+        tree.remove(value, defaultComparator);
     }
 
     function exists(uint256 value) public view returns (bool) {
-        return tree.exists(value);
+        return tree.exists(value, defaultComparator);
     }
 
     function size() public view returns (uint256) {
