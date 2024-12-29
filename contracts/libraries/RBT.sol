@@ -65,6 +65,7 @@ library RBT {
             } else {
                 if (currentNode.right == NULL_NODE) {
                     currentNode.right = nodeId;
+                    newNode.parent = current;
                     break;
                 }
                 current = currentNode.right;
@@ -94,6 +95,79 @@ library RBT {
         return _find(tree, value) != NULL_NODE;
     }
 
+    function pop(Tree storage tree) internal returns (uint256) {
+        require(tree.root != NULL_NODE, "Tree is empty");
+        uint256 current = tree.root;
+        while (tree.nodes[current].left != NULL_NODE) {
+            current = tree.nodes[current].left;
+        }
+        uint256 minValue = tree.nodes[current].value;
+        remove(tree, minValue);
+        return minValue;
+    }
+
+    function remove(Tree storage tree, uint256 value) internal {
+        uint256 nodeId = _find(tree, value);
+        if (nodeId == NULL_NODE) return;
+
+        if (
+            tree.nodes[nodeId].left != NULL_NODE &&
+            tree.nodes[nodeId].right != NULL_NODE
+        ) {
+            uint256 successor = tree.nodes[nodeId].right;
+            while (tree.nodes[successor].left != NULL_NODE) {
+                successor = tree.nodes[successor].left;
+            }
+            tree.nodes[nodeId].value = tree.nodes[successor].value;
+            nodeId = successor;
+        }
+
+        uint256 replacement = tree.nodes[nodeId].left != NULL_NODE
+            ? tree.nodes[nodeId].left
+            : tree.nodes[nodeId].right;
+
+        if (replacement != NULL_NODE) {
+            tree.nodes[replacement].parent = tree.nodes[nodeId].parent;
+            if (tree.nodes[nodeId].parent == NULL_NODE) {
+                tree.root = replacement;
+            } else if (tree.nodes[tree.nodes[nodeId].parent].left == nodeId) {
+                tree.nodes[tree.nodes[nodeId].parent].left = replacement;
+            } else {
+                tree.nodes[tree.nodes[nodeId].parent].right = replacement;
+            }
+
+            tree.nodes[nodeId].left = NULL_NODE;
+            tree.nodes[nodeId].right = NULL_NODE;
+            tree.nodes[nodeId].parent = NULL_NODE;
+        } else if (tree.nodes[nodeId].parent == NULL_NODE) {
+            tree.root = NULL_NODE;
+        } else {
+            if (tree.nodes[tree.nodes[nodeId].parent].left == nodeId) {
+                tree.nodes[tree.nodes[nodeId].parent].left = NULL_NODE;
+            } else {
+                tree.nodes[tree.nodes[nodeId].parent].right = NULL_NODE;
+            }
+        }
+
+        bool doubleBlack = (!tree.nodes[nodeId].red) &&
+            (replacement == NULL_NODE || !tree.nodes[replacement].red);
+
+        if (doubleBlack) {
+            // TODO: Fix double-black situation, cover by a test
+        } else if (replacement != NULL_NODE) {
+            tree.nodes[replacement].red = false;
+        }
+
+        tree.size--;
+        delete tree.nodes[nodeId];
+    }
+
+    function list(Tree storage tree) internal view returns (uint256[] memory) {
+        uint256[] memory result = new uint256[](tree.size);
+        _inorder(tree, tree.root, result, 0);
+        return result;
+    }
+
     function _find(
         Tree storage tree,
         uint256 value
@@ -120,11 +194,15 @@ library RBT {
         }
 
         uint256 grandParentId = tree.nodes[parentId].parent;
+        if (grandParentId == NULL_NODE) {
+            tree.nodes[parentId].red = false;
+            return;
+        }
         uint256 uncleId = _getUncle(tree, nodeId);
 
         if (uncleId != NULL_NODE && tree.nodes[uncleId].red) {
             // Change the color of P and U to black
-            tree.nodes[tree.nodes[nodeId].parent].red = false;
+            tree.nodes[parentId].red = false;
             tree.nodes[uncleId].red = false;
             if (grandParentId != NULL_NODE) {
                 // Change the color of G to red
@@ -218,5 +296,21 @@ library RBT {
 
         tree.nodes[leftChildId].right = nodeId;
         tree.nodes[nodeId].parent = leftChildId;
+    }
+
+    function _inorder(
+        Tree storage tree,
+        uint256 current,
+        uint256[] memory result,
+        uint256 index
+    ) internal view returns (uint256) {
+        if (current == NULL_NODE) {
+            return index;
+        }
+        Node storage currentNode = tree.nodes[current];
+        index = _inorder(tree, currentNode.left, result, index);
+        result[index++] = currentNode.value;
+        index = _inorder(tree, currentNode.right, result, index);
+        return index;
     }
 }
